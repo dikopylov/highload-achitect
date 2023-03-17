@@ -18,6 +18,7 @@ services:
     depends_on:
       - postgres
       - migrator
+    restart: on-failure
 
   postgres:
     image: postgres:15-alpine
