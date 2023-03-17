@@ -1,0 +1,47 @@
+version: '3.9'
+
+networks:
+  highload-architect-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.1.0/24
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    volumes:
+      - .:/opt/app
+    networks:
+      - highload-architect-network
+    depends_on:
+      - postgres
+      - migrator
+
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - ${DATABASE_PORT_HOST:-5432}:5432
+    volumes:
+      - ./postgresql/data:/postgresql/data
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+    networks:
+      - highload-architect-network
+
+  migrator:
+    image: migrate/migrate
+    volumes:
+      - ./db/migrations:/opt/app/highload-architect/db/migrations
+    command: [ "-path", "/opt/app/highload-architect/db/migrations/", "-database",  "${DATABASE_DRIVER}://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT_DOCKER}/${DATABASE_NAME}?sslmode=disable", "up" ]
+    restart: on-failure
+    depends_on:
+      - postgres
+    networks:
+      - highload-architect-network
