@@ -39,7 +39,7 @@ services:
     image: migrate/migrate
     volumes:
       - ./db/migrations:/opt/app/highload-architect/db/migrations
-    command: [ "-path", "/opt/app/highload-architect/db/migrations/", "-database",  "${DATABASE_DRIVER}://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT_DOCKER}/${DATABASE_NAME}?sslmode=disable", "up" ]
+    command: [ "-path", "/opt/app/highload-architect/db/migrations/", "-database",  "${DATABASE_DRIVER}://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT_CONTAINER}/${DATABASE_NAME}?sslmode=disable", "up" ]
     restart: on-failure
     depends_on:
       - postgres
