@@ -9,6 +9,7 @@ type HTTPServer interface {
 	UserRegister(c *gin.Context)
 	Login(c *gin.Context)
 	GetUserByID(c *gin.Context)
+	UserSearch(c *gin.Context)
 }
 
 type implServer struct {

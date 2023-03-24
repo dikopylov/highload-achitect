@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/dikopylov/highload-architect/internal/model/types"
 	"github.com/jmoiron/sqlx"
 )
@@ -13,6 +14,7 @@ var ErrUserNotFound = errors.New("user not found")
 type Repository interface {
 	CreateUser(ctx context.Context, user *User) error
 	GetUserByID(ctx context.Context, id types.UserID) (*User, error)
+	SearchUser(ctx context.Context, spec *SearchUserSpec) (Users, error)
 }
 
 type pgsqlRepository struct {
@@ -26,7 +28,7 @@ func NewPgsqlRepository(db sqlx.DB) Repository {
 func (r *pgsqlRepository) CreateUser(ctx context.Context, user *User) error {
 	var userUUID types.UserID
 	const query = `
-insert into users (first_name, second_name, birthdate, biography, city, password, age) 
+insert into users (first_name, last_name, birthdate, biography, city, password, age) 
 values ($1, $2, $3, $4, $5, $6, $7)
 returning id
 `
@@ -35,7 +37,7 @@ returning id
 		&userUUID,
 		query,
 		user.FirstName,
-		user.SecondName,
+		user.LastName,
 		user.Birthdate,
 		user.Biography,
 		user.City,
@@ -53,7 +55,7 @@ returning id
 
 func (r *pgsqlRepository) GetUserByID(ctx context.Context, id types.UserID) (*User, error) {
 	const query = `
-select id, first_name, second_name, birthdate, biography, city, password, age
+select id, first_name, last_name, birthdate, biography, city, password, age
 from users 
 where id = $1
 `
@@ -72,4 +74,31 @@ where id = $1
 	}
 
 	return user, nil
+}
+
+func (r *pgsqlRepository) SearchUser(ctx context.Context, spec *SearchUserSpec) (Users, error) {
+	const query = `
+select id, first_name, last_name, birthdate, biography, city, password, age
+from users 
+where first_name like $1 and last_name like $2
+`
+	var users Users
+
+	err := r.db.SelectContext(
+		ctx,
+		&users,
+		query,
+		fmt.Sprintf("%s%%", spec.FirstName),
+		fmt.Sprintf("%s%%", spec.LastName),
+	)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
+
+		return nil, err
+	}
+
+	return users, nil
 }

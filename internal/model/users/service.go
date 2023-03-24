@@ -12,6 +12,7 @@ type Service interface {
 	Register(ctx context.Context, user *User) error
 	Login(ctx context.Context, id types.UserID, rawPassword string) (auth.Token, error)
 	GetUserByID(ctx context.Context, id types.UserID) (*User, error)
+	SearchUser(ctx context.Context, spec *SearchUserSpec) (Users, error)
 }
 
 type implService struct {
@@ -55,4 +56,12 @@ func (s *implService) GetUserByID(ctx context.Context, id types.UserID) (*User, 
 		return nil, errors.New("id must be passed")
 	}
 	return s.repository.GetUserByID(ctx, id)
+}
+
+func (s *implService) SearchUser(ctx context.Context, spec *SearchUserSpec) (Users, error) {
+	if !spec.IsValid() {
+		return nil, errors.New("search params are invalid")
+	}
+
+	return s.repository.SearchUser(ctx, spec)
 }

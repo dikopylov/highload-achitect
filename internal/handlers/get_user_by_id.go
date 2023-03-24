@@ -16,13 +16,13 @@ type GetUserByIDRequest struct {
 }
 
 type GetUserByIDResponse struct {
-	ID         string    `json:"id"`
-	FirstName  string    `json:"first_name"`
-	SecondName string    `json:"second_name" `
-	Biography  string    `json:"biography" `
-	City       string    `json:"city" `
-	Birthdate  time.Time `json:"birthdate"`
-	Age        uint      `json:"age" `
+	ID        string    `json:"id"`
+	FirstName string    `json:"first_name"`
+	LastName  string    `json:"last_name" `
+	Biography string    `json:"biography" `
+	City      string    `json:"city" `
+	Birthdate time.Time `json:"birthdate"`
+	Age       uint      `json:"age" `
 }
 
 func (s *implServer) GetUserByID(c *gin.Context) {
@@ -70,12 +70,12 @@ func (s *implServer) GetUserByID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, &GetUserByIDResponse{
-		ID:         user.ID.String(),
-		Birthdate:  user.Birthdate,
-		FirstName:  user.FirstName,
-		SecondName: user.SecondName,
-		Biography:  user.Biography,
-		City:       user.City,
-		Age:        user.Age,
+		ID:        user.ID.String(),
+		Birthdate: *user.Birthdate,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Biography: user.Biography,
+		City:      user.City,
+		Age:       user.Age,
 	})
 }

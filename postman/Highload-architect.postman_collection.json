@@ -16,7 +16,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"first_name\": \"Ivan\",\n    \"second_name\": \"Ivanov\", \n    \"birthdate\": \"1990-04-20T00:00:00Z\",\n    \"biography\": \"A student\",\n    \"city\": \"Moscow\",\n    \"password\": \"123456\",\n    \"age\": 41\n}",
+							"raw": "{\n    \"first_name\": \"Ivan\",\n    \"last_name\": \"Ivanov\", \n    \"birthdate\": \"1990-04-20T00:00:00Z\",\n    \"biography\": \"A student\",\n    \"city\": \"Moscow\",\n    \"password\": \"123456\",\n    \"age\": 41\n}",
 							"options": {
 								"raw": {
 									"language": "json"

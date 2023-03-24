@@ -28,6 +28,7 @@ func InitRouter(server HTTPServer) *gin.Engine {
 	{
 		userRoutes.POST("/register", server.UserRegister)
 		userRoutes.GET("/get/:id", server.GetUserByID)
+		userRoutes.GET("/search", server.UserSearch)
 	}
 
 	r.POST("/ping", func(c *gin.Context) {
