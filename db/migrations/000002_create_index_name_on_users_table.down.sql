@@ -1,0 +1,1 @@
+drop index last_name_first_name_idx;

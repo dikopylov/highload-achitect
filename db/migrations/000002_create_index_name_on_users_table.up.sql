@@ -1,0 +1,1 @@
+create index concurrently last_name_first_name_idx on users (last_name, first_name);

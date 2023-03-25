@@ -3,7 +3,9 @@ package handlers
 import (
 	"github.com/dikopylov/highload-architect/internal/handlers/middleware"
 	"github.com/gin-gonic/gin"
+	"io"
 	"net/http"
+	"os"
 )
 
 type FailedRequest struct {
@@ -13,6 +15,13 @@ type FailedRequest struct {
 }
 
 func InitRouter(server HTTPServer) *gin.Engine {
+	// Disable Console Color, you don't need console color when writing the logs to file.
+	gin.DisableConsoleColor()
+
+	// Logging to a file.
+	f, _ := os.Create("gin.log")
+	gin.DefaultWriter = io.MultiWriter(f)
+
 	r := gin.Default()
 	r.Use(middleware.RequestID())
 
