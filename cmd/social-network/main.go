@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/dikopylov/highload-architect/internal/handlers"
 	"github.com/dikopylov/highload-architect/internal/infrastructure/config"
+	"github.com/dikopylov/highload-architect/internal/infrastructure/database"
 	"github.com/dikopylov/highload-architect/internal/model/auth"
 	"github.com/dikopylov/highload-architect/internal/model/users"
 	"github.com/jmoiron/sqlx"
@@ -18,22 +19,50 @@ func main() {
 		log.Fatalln(fmt.Errorf("fatal error config file: %w", err))
 	}
 
-	dsn := fmt.Sprintf(
-		"%s://%s:%s@%s:%d/%s?sslmode=disable",
-		viper.GetString(config.DatabaseDriver),
-		viper.GetString(config.DatabaseUser),
-		viper.GetString(config.DatabasePassword),
-		viper.GetString(config.DatabaseHost),
-		viper.GetInt(config.DatabasePortInContainer),
-		viper.GetString(config.DatabaseName),
-	)
+	var masterDSN string
 
-	db, err := sqlx.Connect(viper.GetString(config.DatabaseDriver), dsn)
+	if viper.GetString(config.MasterDatabaseDSN) != "" {
+		masterDSN = viper.GetString(config.MasterDatabaseDSN)
+	} else {
+		masterDSN = fmt.Sprintf(
+			"%s://%s:%s@%s:%d/%s?sslmode=disable",
+			viper.GetString(config.DatabaseDriver),
+			viper.GetString(config.DatabaseUser),
+			viper.GetString(config.DatabasePassword),
+			viper.GetString(config.DatabaseHost),
+			viper.GetInt(config.DatabasePortInContainer),
+			viper.GetString(config.DatabaseName),
+		)
+	}
+
+	dbConnectionSpec := &database.ConnectionSpec{}
+
+	masterDB, err := sqlx.Connect(viper.GetString(config.DatabaseDriver), masterDSN)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	dbConnectionSpec.Master = masterDB
+
+	syncDB, err := sqlx.Connect(viper.GetString(config.DatabaseDriver), viper.GetString(config.SlaveSyncDatabaseDSN))
+	if err != nil {
+		log.Println(err)
+	} else {
+		dbConnectionSpec.SyncSlave = syncDB
+	}
+
+	asyncDB, err := sqlx.Connect(viper.GetString(config.DatabaseDriver), viper.GetString(config.SlaveAsyncDatabaseDSN))
+	if err != nil {
+		log.Println(err)
+	} else {
+		dbConnectionSpec.AsyncSlave = asyncDB
+	}
+
+	db, err := database.NewDatabase(dbConnectionSpec)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	userRepository := users.NewPgsqlRepository(*db)
+	userRepository := users.NewPgsqlRepository(db)
 	userService := users.NewService(userRepository, auth.NewInMemoryStorage())
 	server := handlers.NewHTTPServer(userService)
 	r := handlers.InitRouter(server)

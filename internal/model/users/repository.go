@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/dikopylov/highload-architect/internal/infrastructure/database"
 	"github.com/dikopylov/highload-architect/internal/model/types"
-	"github.com/jmoiron/sqlx"
 )
 
 var ErrUserNotFound = errors.New("user not found")
@@ -18,10 +18,10 @@ type Repository interface {
 }
 
 type pgsqlRepository struct {
-	db sqlx.DB
+	db *database.DB
 }
 
-func NewPgsqlRepository(db sqlx.DB) Repository {
+func NewPgsqlRepository(db *database.DB) Repository {
 	return &pgsqlRepository{db: db}
 }
 
@@ -32,7 +32,7 @@ insert into users (first_name, last_name, birthdate, biography, city, password, 
 values ($1, $2, $3, $4, $5, $6, $7)
 returning id
 `
-	err := r.db.GetContext(
+	err := r.db.GetMaster().GetContext(
 		ctx,
 		&userUUID,
 		query,
@@ -60,7 +60,7 @@ from users
 where id = $1
 `
 	user := &User{}
-	err := r.db.GetContext(ctx, user, query, id.String())
+	err := r.db.GetAsyncSlave().GetContext(ctx, user, query, id.String())
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrUserNotFound
@@ -84,7 +84,7 @@ where first_name like $1 and last_name like $2
 `
 	var users Users
 
-	err := r.db.SelectContext(
+	err := r.db.GetAsyncSlave().SelectContext(
 		ctx,
 		&users,
 		query,
